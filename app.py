@@ -87,7 +87,7 @@ class paddleWrapper(ClamsApp):
                                 sent_annotation.add_property("text", layer2[1][0])
                                 new_view.new_annotation(AnnotationTypes.Alignment, source=sent_annotation.long_id, target=bbox_annotation.long_id)
                                 if text_content:
-                                    text_content += "\\"
+                                    text_content += "\n"
                                 text_content += layer2[1][0]
                         text_document: Document = new_view.new_textdocument(text_content)
                         new_view.new_annotation(AnnotationTypes.Alignment, source=source_id, target=text_document.long_id)
@@ -118,7 +118,7 @@ class paddleWrapper(ClamsApp):
                                 sent_annotation.add_property("text", layer2[1][0])
                                 new_view.new_annotation(AnnotationTypes.Alignment, source=sent_annotation.long_id, target=bbox_annotation.id)
                                 if text_content:
-                                    text_content += "\\"
+                                    text_content += "\n"
                                 text_content += layer2[1][0]
                             text_document: Document = new_view.new_textdocument(text_content)
                             new_view.new_annotation(AnnotationTypes.Alignment, source=source_id, target=text_document.long_id)
@@ -149,7 +149,7 @@ class paddleWrapper(ClamsApp):
                     sent_annotation.add_property("text", layer2[1][0])
                     new_view.new_annotation(AnnotationTypes.Alignment, source=sent_annotation.long_id, target=bbox_annotation.long_id)
                     if text_content:
-                        text_content += "\\"
+                        text_content += "\n"
                     text_content += layer2[1][0]
             text_document: Document = new_view.new_textdocument(text_content)
             new_view.new_annotation(AnnotationTypes.Alignment, source=image_doc.long_id, target=text_document.long_id)

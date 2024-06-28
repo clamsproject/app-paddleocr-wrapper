@@ -1,33 +1,15 @@
-"""
-DELETE THIS MODULE STRING AND REPLACE IT WITH A DESCRIPTION OF YOUR APP.
-
-app.py Template
-
-The app.py script does several things:
-- import the necessary code
-- create a subclass of ClamsApp that defines the metadata and provides a method to run the wrapped NLP tool
-- provide a way to run the code as a RESTful Flask service 
-
-
-"""
-
 import argparse
 import logging
 
-# Imports needed for Clams and MMIF.
-# Non-NLP Clams applications will require AnnotationTypes
-
-from clams import ClamsApp, Restifier
-from mmif import Mmif, View, Annotation, Document, AnnotationTypes, DocumentTypes
-from mmif.utils import video_document_helper as vdh
-
-# For an NLP tool we need to import the LAPPS vocabulary items
-from lapps.discriminators import Uri
-
-from paddleocr import PaddleOCR
 import numpy as np
+from clams import ClamsApp, Restifier
+from lapps.discriminators import Uri
+from mmif import Mmif, View, Document, AnnotationTypes, DocumentTypes
+from mmif.utils import video_document_helper as vdh
+from paddleocr import PaddleOCR
 
-class paddleWrapper(ClamsApp):
+
+class PaddleocrWrapper(ClamsApp):
 
     def __init__(self):
         super().__init__()
@@ -43,8 +25,6 @@ class paddleWrapper(ClamsApp):
         self.logger.debug("running app")
         language = parameters['lang']
         self.ocr = PaddleOCR(lang=language)
-        self.mmif = mmif if type(mmif) is Mmif else Mmif(mmif)
-
 
         # process the text documents in the documents list
         for video_doc in mmif.get_documents_by_type(DocumentTypes.VideoDocument):
@@ -74,14 +54,11 @@ class paddleWrapper(ClamsApp):
                     text_content = ""
                     for layer1 in result:
                         if layer1 is not None:
-                            if representative.parent != new_view.id:
-                                source_id = representative.long_id
-                            else:
-                                source_id = representative.id
+                            source_id = representative.long_id
                             for layer2 in layer1:
                                 bbox_annotation = new_view.new_annotation(AnnotationTypes.BoundingBox)
                                 bbox_annotation.add_property("coordinates", layer2[0])
-                                bbox_annotation.add_property("boxType", "text")
+                                bbox_annotation.add_property("label", "text")
                                 new_view.new_annotation(AnnotationTypes.Alignment, source=source_id, target=bbox_annotation.long_id)
                                 sent_annotation = new_view.new_annotation(Uri.SENTENCE)
                                 sent_annotation.add_property("text", layer2[1][0])
@@ -89,10 +66,8 @@ class paddleWrapper(ClamsApp):
                                 if text_content:
                                     text_content += "\n"
                                 text_content += layer2[1][0]
-                        text_document: Document = new_view.new_textdocument(text_content)
+                        text_document: Document = new_view.new_textdocument(text_content, text_content, language)
                         new_view.new_annotation(AnnotationTypes.Alignment, source=source_id, target=text_document.long_id)
-                        text_document.add_property("text", {"@language": language})
-                        text_document.add_property("text", {"@value": text_content})
 
                 for rep_id in timeframe.get("representatives"):
                     representative: AnnotationTypes.TimePoint = input_view.get_annotation_by_id(rep_id)
@@ -125,7 +100,6 @@ class paddleWrapper(ClamsApp):
                             text_document.add_property("text", {"@language": language})
                             text_document.add_property("text", {"@value": text_content})
                 
-
         if mmif.get_documents_by_type(DocumentTypes.ImageDocument):
             image_doc: Document = mmif.get_documents_by_type(DocumentTypes.ImageDocument)[0]
             new_view: View = mmif.new_view()
@@ -156,10 +130,7 @@ class paddleWrapper(ClamsApp):
             text_document.add_property("text", {"@language": language})
             text_document.add_property("text", {"@value": text_content})
 
-
-        # return the MMIF object
-        return self.mmif
-    
+        return mmif
 
 
 if __name__ == "__main__":
@@ -172,7 +143,7 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
 
     # create the app instance
-    app = paddleWrapper()
+    app = PaddleocrWrapper()
 
     http_app = Restifier(app, port=int(parsed_args.port))
     # for running the application in production mode

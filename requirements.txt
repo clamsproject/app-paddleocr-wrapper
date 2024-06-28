@@ -1,6 +1,5 @@
 # Make sure clams-python version is explicitly specified, at least the lower bound
 clams-python==1.2.2
-lapps
 mmif-python[cv]
 paddlepaddle
 paddleocr>=2.0.1
